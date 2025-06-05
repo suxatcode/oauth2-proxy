@@ -1,0 +1,68 @@
+# This docker-compose file can be used to reproduce session clearing issue 3057
+# It extends the Keycloak example with a Redis backend for session storage.
+# Access http://oauth2-proxy.localtest.me:4180 to start a login.
+version: '3.0'
+services:
+  oauth2-proxy:
+    container_name: oauth2-proxy
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.9.0
+    command: --config /oauth2-proxy.cfg
+    hostname: oauth2-proxy
+    volumes:
+      - "./oauth2-proxy-keycloak-redis.cfg:/oauth2-proxy.cfg"
+    restart: unless-stopped
+    ports:
+      - 4180:4180/tcp
+    networks:
+      keycloak: {}
+      httpbin: {}
+      oauth2-proxy: {}
+    depends_on:
+      - httpbin
+      - keycloak
+      - redis
+
+  httpbin:
+    container_name: httpbin
+    image: kennethreitz/httpbin:latest
+    hostname: httpbin
+    ports:
+      - 8080:80/tcp
+    networks:
+      httpbin:
+        aliases:
+          - httpbin.localtest.me
+
+  keycloak:
+    container_name: keycloak
+    image: keycloak/keycloak:25.0
+    hostname: keycloak
+    command:
+      - 'start-dev'
+      - '--http-port=9080'
+      - '--import-realm'
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+    environment:
+      KC_HTTP_PORT: 9080
+      KEYCLOAK_ADMIN: admin@example.com
+      KEYCLOAK_ADMIN_PASSWORD: password
+    ports:
+      - 9080:9080/tcp
+    networks:
+      keycloak:
+        aliases:
+          - keycloak.localtest.me
+
+  redis:
+    container_name: redis
+    image: redis:7
+    ports:
+      - 6379:6379/tcp
+    networks:
+      oauth2-proxy: {}
+
+networks:
+  httpbin: {}
+  keycloak: {}
+  oauth2-proxy: {}
