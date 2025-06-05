@@ -295,27 +295,38 @@ var _ = Describe("Stored Session Suite", func() {
 				refreshSession:  defaultRefreshFunc,
 				validateSession: defaultValidateFunc,
 			}),
-			Entry("when the provider refresh fails but validation succeeds", storedSessionLoaderTableInput{
-				requestHeaders: http.Header{
-					"Cookie": []string{"_oauth2_proxy=RefreshError"},
-				},
-				existingSession: nil,
-				expectedSession: &sessionsapi.SessionState{
-					RefreshToken: "RefreshError",
-					CreatedAt:    &createdPast,
-					ExpiresOn:    &createdFuture,
-					Lock:         &sessionsapi.NoOpLock{},
-				},
-				store:           defaultSessionStore,
-				refreshPeriod:   1 * time.Minute,
-				refreshSession:  defaultRefreshFunc,
-				validateSession: defaultValidateFunc,
-			}),
-			Entry("when the provider refresh fails and validation fails", storedSessionLoaderTableInput{
-				requestHeaders: http.Header{
-					"Cookie": []string{"_oauth2_proxy=RefreshError"},
-				},
-				existingSession: nil,
+                        Entry("when the provider refresh fails but validation succeeds", storedSessionLoaderTableInput{
+                                requestHeaders: http.Header{
+                                        "Cookie": []string{"_oauth2_proxy=RefreshError"},
+                                },
+                                existingSession: nil,
+                                expectedSession: &sessionsapi.SessionState{
+                                        RefreshToken: "RefreshError",
+                                        CreatedAt:    &createdPast,
+                                        ExpiresOn:    &createdFuture,
+                                        Lock:         &sessionsapi.NoOpLock{},
+                                },
+                                store:           defaultSessionStore,
+                                refreshPeriod:   1 * time.Minute,
+                                refreshSession:  defaultRefreshFunc,
+                                validateSession: defaultValidateFunc,
+                        }),
+                        Entry("when the provider refresh fails and the session should be cleared (issue 3057)", storedSessionLoaderTableInput{
+                                requestHeaders: http.Header{
+                                        "Cookie": []string{"_oauth2_proxy=RefreshError"},
+                                },
+                                existingSession: nil,
+                                expectedSession: nil,
+                                store:           defaultSessionStore,
+                                refreshPeriod:   1 * time.Minute,
+                                refreshSession:  defaultRefreshFunc,
+                                validateSession: defaultValidateFunc,
+                        }),
+                        Entry("when the provider refresh fails and validation fails", storedSessionLoaderTableInput{
+                                requestHeaders: http.Header{
+                                        "Cookie": []string{"_oauth2_proxy=RefreshError"},
+                                },
+                                existingSession: nil,
 				expectedSession: nil,
 				store:           defaultSessionStore,
 				refreshPeriod:   1 * time.Minute,
